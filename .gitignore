@@ -9,3 +9,5 @@ pom.xml.asc
 .lein-repl-history
 .lein-plugins/
 .lein-failures
+/out/
+/literate_2048.js
