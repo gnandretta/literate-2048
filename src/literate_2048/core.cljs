@@ -75,6 +75,46 @@
 
 ;; # Tile synthesis
 
+;; The goal of the game is to merge tiles together until a tile that is not able
+;; to be merged appears. Thus, we need a way to tell if a tile can be merged
+;; with another tiles and a mechanism to obtain the result of the merge of two
+;; given tiles.
+
+;; Since 'merge' is already a map operation, let's name the process 'synthesis'.
+
+(defprotocol ITile
+  "Implementation details of a tile."
+  (-synth? [this]
+    "Returns true if the tile can participate in a synthesis.")
+  (-synth [this other]
+    "Returns the result of the synthesis, another ITile when they can be
+    synthesized or nil when they can't. No tile can be synthesized with nil."))
+
+;; While two tiles might be able to participate in a synthesis they might not be
+;; able to be synthesized together.
+
+;; To synthesize a sequence of tiles, take the first two and try to synthesize
+;; them:
+;; - If they can be synthesized, accumulate the result of their synthesis and
+;;   repeat the process for the rest of the tiles (a tile can't be synthesized
+;;   more than once in one process).
+;; - If they can't be synthesized, accumulate the first tile and repeat the
+;;   process for all the tiles except that firstone.
+;; - If there's only one tile, accumulate it. (This can be reduced to the
+;;   previous directive if we try to synthesize the tile with nil.)
+;; - When there are no more tiles the process is done, and the accumulation is
+;;   its result.
+(defn synth-adjacent
+  "Returns a sequence of the elements of tiles, replacing adjacent elements with
+   the result of applying -synth to them when is not logically false."
+  [tiles]
+  (loop [xs tiles, r []]
+    (if (seq xs)
+      (if-let [x (-synth (first xs) (second xs))]
+        (recur (rest (rest xs)) (conj r x))
+        (recur (rest xs) (conj r (first xs))))
+      r)))
+
 ;; # Moves
 
 ;; # Rendering
