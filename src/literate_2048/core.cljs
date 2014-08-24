@@ -117,6 +117,87 @@
 
 ;; # Moves
 
+;; The two following functions will make it easier to describe the player moves
+;; using sequences. The first one removes all the nil elements of a sequence.
+
+(defn compact
+  "Returns a lazy sequence of the items in coll that are not nil."
+  [coll]
+  (remove nil? coll))
+
+;; The second ensures that a sequence has a given length, removing or adding
+;; elements as necessary. The added elements are nil by default, but they can be
+;; provided.
+
+(defn take-exactly
+  "Returns a lazy sequence of the first n items in coll, or all items plus
+   the first (- n (count coll)) items of (cycle pad). If a pad is not supplied,
+   defaults to an infinite collection of nils."
+  ([n coll] (take-exactly n coll (repeat nil)))
+  ([n coll pad] (take n (concat coll (cycle pad)))))
+
+;; When the player makes a move, tiles slide as far as possible in the chosen
+;; direction until they are stopped by either another tile or the edge of the
+;; board. If two tiles of the same number collide while moving, they will merge
+;; into a tile with the total value of the two tiles that collided. The
+;; resulting tile cannot merge with another tile again in the same move.
+
+;; While the entire process looks overwhelming, it turns out that it is easy to
+;; move a single row to the left. If a row is a sequence of tiles and/or nil
+;; elements, then:
+;; - applying compact to the sequence solves the 'sliding' part of the problem,
+;; - and applying synth-adjacent to that solves the 'merge' part.
+;; However, the previous function applications lead to an undesired consequence,
+;; the resulting sequence is not a proper row. It might be shorter because of
+;; the lack of nil elements. Fortunately, nils should be aligned to the right
+;; and can be appended with take-exactly.
+
+(defn slide-synth-line
+  [line]
+  (->> line compact synth-adjacent (take-exactly board-order)))
+
+;; There is a very good reason the previous function was not called
+;; slide-synth-row. If the input and the output of slide-synth-line are
+;; reversed, the resulting sequence is the equivalent of moving the row to the
+;; right. Moreover, every move can be obtained by applying the previous
+;; function, it just need to be provided with the right line argument.
+
+;; A line is a sequence that represents the flow of the tiles during a move. In
+;; other words, is a row or a column of the board, where the closest a square is
+;; is to edge of the board the tiles are sliding to, the sooner it appears in
+;; the sequence.
+
+;; The slide and synthesis of the whole board can be summarized as:
+;; - Obtaining the lines. Rows are partitions of 4 elements of our board
+;;   representation and columns are transposition of them.
+;; - Slide and synth the lines.
+;; - Turn the resulting sequences (rows or columns) back to our board
+;; representation.
+
+(defn slide-synth
+  "Returns the result of sliding and synthesizing the tiles of board in the
+   given direction."
+  [board direction]
+  (let [transpose #(apply map list %)
+        reverse-slide-synth-line (comp reverse slide-synth-line reverse)
+        rows (partition board-order board)
+        cols (transpose rows)]
+    (vec (flatten
+          (case direction
+            :left (map slide-synth-line rows)
+            :right (map reverse-slide-synth-line rows)
+            :up (-> cols (map slide-synth-line) transpose)
+            :down (-> cols (map reverse-slide-synth-line) transpose))))))
+
+;; A tile is added when the board changes.
+
+(defn move
+  "Slides and synthesizes the tiles of board in the given direction, and return
+   the result when is different from board."
+  [tile-fn board direction]
+  (let [board' (slide-synth board direction)]
+    (when (not= board board') (add-tile tile-fn board'))))
+
 ;; # Rendering
 
 ;; # UI
