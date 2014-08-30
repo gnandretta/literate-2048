@@ -1,4 +1,6 @@
-(ns literate-2048.core)
+(ns literate-2048.core
+  (:require [quiescent :as q :include-macros true]
+            [quiescent.dom :as d]))
 
 (enable-console-print!)
 
@@ -199,5 +201,34 @@
     (when (not= board board') (add-tile tile-fn board'))))
 
 ;; # Rendering
+
+(defn pos-classes
+  [[i j]]
+  (str "pos pos-" i "-" j))
+
+(defn tile-classes
+  [val]
+  (str "tile tile-" val))
+
+(defn background-view
+  [rows cols]
+  (apply d/div {:className "background"}
+    (for [i (range rows) j (range cols)]
+      (d/div {:className (pos-classes [i j])}))))
+
+(defn tiles-view [s]
+  (apply d/div {:className "tiles"}
+    (map (fn [{:keys [val pos key classes] :as tile}]
+           (d/div {:className (pos-classes pos)
+                   :key key}
+             (d/div {:className (str classes " " (tile-classes val))}
+               val)))
+         s)))
+
+(q/defcomponent SquareBoard
+  [tiles order]
+  (d/div {:className "square-board"}
+    (background-view order order)
+    (tiles-view tiles)))
 
 ;; # UI

@@ -1,0 +1,115 @@
+.square-board {
+  background-color: rgb(187,173,160);
+  width: 499px;
+  height: 499px;
+  border-radius: 6px;
+  position: relative;
+}
+
+.pos {
+  height: 106px;
+  width: 106px;
+  position: absolute;
+  border-radius: 4px;
+  background-color: rgb(205,193,180);
+}
+
+.pos-0-0 { -webkit-transform: translate(15px,   15px); }
+.pos-0-1 { -webkit-transform: translate(136px,  15px); }
+.pos-0-2 { -webkit-transform: translate(257px,  15px); }
+.pos-0-3 { -webkit-transform: translate(378px,  15px); }
+.pos-1-0 { -webkit-transform: translate(15px,  136px); }
+.pos-1-1 { -webkit-transform: translate(136px, 136px); }
+.pos-1-2 { -webkit-transform: translate(257px, 136px); }
+.pos-1-3 { -webkit-transform: translate(378px, 136px); }
+.pos-2-0 { -webkit-transform: translate(15px,  257px); }
+.pos-2-1 { -webkit-transform: translate(136px, 257px); }
+.pos-2-2 { -webkit-transform: translate(257px, 257px); }
+.pos-2-3 { -webkit-transform: translate(378px, 257px); }
+.pos-3-0 { -webkit-transform: translate(15px,  378px); }
+.pos-3-1 { -webkit-transform: translate(136px, 378px); }
+.pos-3-2 { -webkit-transform: translate(257px, 378px); }
+.pos-3-3 { -webkit-transform: translate(378px, 378px); }
+
+
+.tile {
+  position: absolute;
+  background-color: rgb(205,193,180);
+  height: 106px;
+  width: 106px;
+  border-radius: 4px;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-size: 55px;
+  line-height: 102px; 
+  font-weight: bold;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.tile-2 {
+  background-color: rgb(238, 228,218);
+  color: rgb(110,102,93);
+} 
+
+.tile-4 {
+  background-color: rgb(237, 224,200);
+  color: rgb(119,110,101);
+} 
+
+.tile-8 {
+  background-color: rgb(242, 177, 121);
+  color: rgb(249,246,242);
+} 
+
+.tile-16 {
+  background-color: rgb(245, 149, 99);
+  color: rgb(249,246,242);
+} 
+
+.tile-32 {
+  background-color: rgb(245, 124, 95);
+  color: rgb(249,246,242);
+} 
+
+.tile-64 {
+  background-color: rgb(246, 94, 59);
+  color: rgb(249,246,242);
+} 
+
+.tile-128 {
+  background-color: rgb(237, 207,114);
+  color: rgb(249,246,242);
+  font-size: 48px;
+} 
+
+.tile-256 {
+  background-color: rgb(237, 204, 97);
+  color: rgb(249,246,242);
+  font-size: 48px;
+  border: 1px solid rgba(238, 228, 218, 0.5);
+  box-shadow: 0 0 25px 5px rgb(237, 204, 97);
+} 
+
+.tile-512 {
+  background-color: rgb(237, 204, 97);
+  color: rgb(249,246,242);
+  font-size: 48px;
+  border: 1px solid rgba(238, 228, 218, 0.5);
+  box-shadow: 0 0 25px 5px rgb(237, 204, 97);
+} 
+
+.tile-1024 {
+  background-color: rgb(237, 204, 97);
+  color: rgb(249,246,242);
+  font-size: 40px;
+  border: 1px solid rgba(238, 228, 218, 0.5);
+  box-shadow: 0 0 25px 5px rgb(237, 204, 97);
+} 
+
+.tile-2048 {
+  background-color: rgb(237, 204, 97);
+  color: rgb(249,246,242);
+  font-size: 40px;
+  border: 1px solid rgba(238, 228, 218, 0.5);
+  box-shadow: 0 0 25px 5px rgb(237, 204, 97);
+}
