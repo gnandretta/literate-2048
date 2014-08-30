@@ -202,9 +202,9 @@
   (str "tile tile-" val))
 
 (defn background-view
-  [rows cols]
+  [order]
   (apply d/div {:className "background"}
-    (for [i (range rows) j (range cols)]
+    (for [i (range order) j (range order)]
       (d/div {:className (pos-classes [i j])}))))
 
 (defn tiles-view [s]
@@ -219,7 +219,7 @@
 (q/defcomponent SquareBoard
   [tiles order]
   (d/div {:className "square-board"}
-    (background-view order order)
+    (background-view order)
     (tiles-view tiles)))
 
 ;; # UI
