@@ -191,6 +191,26 @@
   (let [board' (slide-synth board direction)]
     (when (not= board board') (add-tile tile-fn board'))))
 
+;; As stated in the 'Tile synthesizes' section, the player wins the game when
+;; a tile that is not able to be merged appears.
+
+(defn won?
+  "Returns true if board contains a tile for which -synth? is falsey."
+  [board]
+  (some (complement -synth?) (compact board)))
+
+;; The player loses the game when there are no more moves left, that is, sliding
+;; and synthesizing the board on every direction yields the same original board.
+;; The game ends when the player wins or loses.
+
+(defn ended?
+  "Returns true if won? is truthy for won? or if applying slide-synth to board
+   and every possible direction always returns board."
+  [board]
+  (or (won? board)
+      (apply = board
+             (map (partial slide-synth board) [:left :right :up :down]))))
+
 ;; # Rendering
 
 (defn pos-classes
