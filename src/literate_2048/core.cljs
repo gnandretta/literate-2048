@@ -31,18 +31,9 @@
   empty-board (vec (repeat (* board-order board-order) nil)))
 
 ;; Every time a tile is added to the board, it randomly appears in a empty
-;; square, with a value of either 2 or 4.
-
-;; It's easy to decide the value of the new tile.
-
-(defn rand-val
-  "Returns 2 most of the time, but sometimes it returns 4."
-  []
-  (if (< (rand) 0.8) 2 4))
-
-;; It's also easy to choose the empty square where the tile will be placed: get
-;; the indexes of the nil elements of the board representation, shuffle them and
-;; take the first.
+;; square. It's easy to choose what that square would be by getting the indexes
+;; of the nil elements of the board representation, shuffling them and taking
+;; the first.
 
 (defn nil-indexes
   "Returns a set with the indexes of the nil elements of v."
@@ -54,23 +45,23 @@
   [v]
   (-> v nil-indexes shuffle first))
 
-;; Finally, associate the index with a new tile in the board representation. A
-;; function that builds the tile from its value must be provided because the
-;; details about what a tile looks like aren't really important and somebody
-;; else should take care of them.
+;; Then, we associate the index with a new tile in the board representation. A
+;; function that builds the tile must be provided because the details about what
+;; a tile looks like aren't really important and somebody else should take care 
+;; of them.
 
 (defn add-tile
   "Takes a board and returns a new one with one more tile, where tile-fn is a
-   function that will take a randomly choosen tile value and return a new tile."
+   function that returns a new tile."
   [tile-fn board]
-  (assoc board (rand-nil-index board) (tile-fn (rand-val))))
+  (assoc board (rand-nil-index board) (tile-fn)))
 
 ;; All the conditions are now met to build a board with two tiles, which is
 ;; necessary for the player to make the first move.
 
 (defn initial-board
   "Returns a board with two (random) tiles, where tile-fn is a function that
-   will take a randomly choosen tile value and return a new tile."
+   returns a new tile."
   [tile-fn]
   (let [f (partial add-tile tile-fn)]
     (-> empty-board f f)))
