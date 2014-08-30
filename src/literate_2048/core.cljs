@@ -179,8 +179,8 @@
           (case direction
             :left (map slide-synth-line rows)
             :right (map reverse-slide-synth-line rows)
-            :up (-> cols (map slide-synth-line) transpose)
-            :down (-> cols (map reverse-slide-synth-line) transpose))))))
+            :up (->> cols (map slide-synth-line) transpose)
+            :down (->> cols (map reverse-slide-synth-line) transpose))))))
 
 ;; A tile is added when the board changes.
 
