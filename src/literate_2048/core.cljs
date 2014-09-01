@@ -1,5 +1,7 @@
 (ns literate-2048.core
-  (:require [quiescent :as q :include-macros true]
+  (:require [goog.events :as events]
+            [cljs.core.async :refer (chan put!)]
+            [quiescent :as q :include-macros true]
             [quiescent.dom :as d]))
 
 (enable-console-print!)
@@ -243,3 +245,134 @@
     (tiles-view tiles)))
 
 ;; # UI
+
+;; A map suffices to represent a tile, the UI's core element. As you may recall
+;; from section 'Board and tiles', if we want to add a tile to the board we need
+;; a function that returns it. Every new tile contains the following keys and
+;; corresponding values:
+;; - :val, the number 2 or 4
+;; - :key, some keyword that uniquely identifies the tile
+;; - :new, the boolean true
+;; The same function will also take two tiles and return the result of merging
+;; them together, that is a new tile described by:
+;; - :val, the sum of the :val of the source tiles
+;; - :key, some keywords that uniquely identifies the tile
+;; - :src, a vector containing the source tiles that originated this one
+
+(defn build-tile
+  "Returns a map with :val associated to val and :key to an unique keyword. If
+   no val is supplied it defaults to 2 most of the time, but it might be 4, and
+   the key :new is mapped to true. Alternatively, when applied to two tiles, x
+   and y, the result is the same as calling it with the sum of the tiles :val
+   and associng the key :src to a vector of the two."
+  ([] (assoc (build-tile (if (< (rand) 0.8) 2 4)) :new true))
+  ([val] {:val val :key (keyword (gensym ""))})
+  ([x y] (assoc (build-tile (+ (:val x) (:val y))) :src [x y])))
+
+;; Before going further, an implementation of the ITile protocol (presented in
+;; section 'Tile synthesis') must be provided. The synthesis of two tiles with
+;; the same :val is another tile (described below), but the synthesis of two
+;; tiles with different :val is nil. A tile with a :val of 2048 can't be
+;; synthesized anymore.
+
+(extend-type cljs.core/PersistentArrayMap
+  ITile
+  (-synth? [this] (not= (:val this) 2048))
+  (-synth [this other]
+    (when (= (:val this) (:val other))
+      (build-tile this other))))
+
+;; Apart from taking place in the computer's memory, all the events need to be
+;; shown on the screen. We'll break every move in two phases, slide and reveal,
+;; because we want to support animation. Only tiles that were already on the
+;; board before the last move took place participate in the slide phase. On the
+;; reveal phase, colliding tiles are replaced with their synthesis and a new
+;; tile appears randomly.
+
+;; As you can probably guess, our board representation needs to be transformed
+;; into something that SquareBoard (defined in section 'Rendering') can make
+;; sense of. Additionaly, the transformation must remove the novelty when the
+;; slide phase is rendered. The next steps illustrate a way to achieve that:
+;; - Keep only the tiles of the board (remove the empty squares) and associate
+;;   on each one :pos to a vector with the column and the row of the square the
+;;   it is located.
+;; - If no novelty must be present, remove new tiles and replace synthesized
+;;   tiles with the original ones. Those tiles will have the position of the
+;;   synthesis because during the animation they need to slide there before
+;;   being merged.
+;; - Associate :classes with "fade-in" on the tiles with the key :new to animate
+;;   its appearence by scaling them to its actual size from an almost invisible
+;;   one.
+;; - Associate :classes with "highlight" on tiles with the key :src to animate
+;;   its appearence by scaling them to a size a little bigger and then back to
+;;   its original size.
+
+(defn board->tiles
+  "Returns a sequence of tiles taken from board with their :pos and sorted by
+   :key. Assocs :classes to \"fade-in\" and \"highlight\" for tiles with the
+   :new and :src keys, respectively. When novelty? is false it removes tiles
+   with the :new key and replaces the ones that contain :src with the tiles in
+   it."
+  [board novelty?]
+  (->> board
+       (keep-indexed (fn [i x]
+                       (let [pos [(quot i board-order) (rem i board-order)]]
+                         (when x (assoc x :pos pos)))))
+       (remove (fn [x] (and (not novelty?) (:new x))))
+       (reduce (fn [r {:keys [pos src] :as x}]
+                 (if (and (not novelty?) src)
+                   (apply conj r (map #(assoc % :pos pos) src))
+                   (conj r x)))
+               [])
+       (map (fn [x]
+              (assoc x :classes (cond (:new x) "fade-in"
+                                      (:src x) "highlight"))))
+       (sort-by :key)))
+
+;; Our board representation only describes how the board looks at a given point
+;; in time. Tiles that are the result of a synthesis or have been added will no
+;; longer be novelty the next time the player makes a move. That's why moves are
+;; made on a board with no transient data, none of its tiles have a :new or a
+;; :src key
+
+(defn handle-move
+  "Performs a new move on board in the given direction after removing transient
+   data from the tiles (:new and :src keys). Returns the new board or nil when
+   no change occurs."
+  [board direction]
+  (move build-tile (map #(dissoc % :new :src) board) direction))
+
+;; The player will make moves by pressing the arrow keys. Core.async's channels
+;; come in handy when observing events from the DOM. If you are not familiar
+;; with core.async there is an excellent introductory
+;; [webinar](http://go.cognitect.com/core_async_webinar_recording) by David
+;; Nolen. The next two functions were copied from the code examples explained on
+;; it. The first can take events from a DOM element and convert them to a
+;; channel which we can read from.
+
+(defn events->chan
+  "Returns a channel c where the events of event-type that happens on the DOM
+   element el will be put. If c is not supplied (chan) is used."
+  ([el event-type] (events->chan el event-type (chan)))
+  ([el event-type c]
+     (events/listen el event-type
+       (fn [e] (put! c e)))
+     c))
+
+;; The second function will return a channel only with the events that we care
+;; about, that is keyup events of the document that happens when an arrow key is
+;; pressed. Also, we would like something more descriptive than the raw DOM
+;; event. So, we'll take every keyup event of the document, map it to its key
+;; code, stop if they don't belong to an arrow key or map it to either :left,
+;; :up, :right or :down when they do. The second function returns a channel that
+;; does just that.
+
+(defn keys-chan
+  "Returns a channel of :left, :up, :right and :down events sourced from arrow
+   key presses."
+  []
+  (let [key-map {37 :left 38 :up 39 :right 40 :down}]
+    (events->chan js/document goog.events.EventType.KEYUP
+                  (chan 1 (comp (map #(.-keyCode %))
+                                (filter (set (keys key-map)))
+                                (map key-map))))))

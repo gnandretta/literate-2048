@@ -4,6 +4,7 @@
 
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/clojurescript "0.0-2311"]
+                 [org.clojure/core.async "0.1.338.0-5c5012-alpha"]
                  [quiescent "0.1.4"]]
 
   :plugins [[lein-cljsbuild "1.0.4-SNAPSHOT"]]
