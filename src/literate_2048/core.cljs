@@ -14,10 +14,10 @@
 ;; and 4 columns. People seem to get really mad when they see the same number
 ;; over and over again, so let's give the number 4 a better name.
 
-(def
-  ^{:doc "Number of squares on a board's row or column. It is also the count of
-          rows and columns and the square root of the total number of squares."}
-  board-order 4)
+(def board-order
+  "Number of squares on a board's row or column. It is also the count of rows
+   rows and columns and the square root of the total number of squares."
+  4)
 
 ;; The choosen representation for the board is a vector of 16 (4*4) elements.
 ;; It will contain the squares from the first row, followed by the squares from
@@ -28,9 +28,9 @@
 ;; The simplest board, and our starting point, is one that is completely empty.
 ;; An empty square is represented by nil.
 
-(def
-  ^{:doc "A vector of board-order^2 nils."}
-  empty-board (vec (repeat (* board-order board-order) nil)))
+(def empty-board
+  "A vector of board-order^2 nils."
+  (vec (repeat (* board-order board-order) nil)))
 
 ;; Every time a tile is added to the board, it randomly appears in a empty
 ;; square. It's easy to choose what that square would be by getting the indexes
