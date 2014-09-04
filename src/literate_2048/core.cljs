@@ -1,8 +1,9 @@
 (ns literate-2048.core
   (:require [goog.events :as events]
-            [cljs.core.async :refer (chan put!)]
+            [cljs.core.async :refer (<! chan timeout put!)]
             [quiescent :as q :include-macros true]
-            [quiescent.dom :as d]))
+            [quiescent.dom :as d])
+  (:require-macros [cljs.core.async.macros :refer (go-loop)]))
 
 (enable-console-print!)
 
@@ -387,6 +388,29 @@
                                       (:src x) "highlight"))))
        (sort-by :key)))
 
+;; A Game component will wrap SquareBoard and supply it with the tile sequence
+;; it expects from a board and a phase. It will also render a message when the
+;; game ends.
+
+(q/defcomponent Game
+  [{:keys [board phase]}]
+  (d/div {:className "game"}
+    (SquareBoard (board->tiles board (= phase :reveal)) board-order)
+    (when (ended? board)
+      (d/div {:className "end-message"}
+        (if (won? board) "You win!" "You lose!")))))
+
+;; A target DOM element also needs to be specified when rendering a Quiescent
+;; component. Because we'll need to perform two renders per move (one for each
+;; animation phase) it's convenient to hide such details in a render function.
+
+(defn render
+  "Renders the Game component to the DOM node with the 'game' id with the given
+   board and phase values."
+  [board phase]
+  (q/render (Game {:board board :phase phase})
+            (.getElementById js/document "game")))
+
 ;; Our board representation only describes how the board looks at a given point
 ;; in time. Tiles that are the result of a synthesis or have been added will no
 ;; longer be novelty the next time the player makes a move. That's why moves are
@@ -434,3 +458,38 @@
                   (chan 1 (comp (map #(.-keyCode %))
                                 (filter (set (keys key-map)))
                                 (map key-map))))))
+
+;; Finally we arrived to the part where we put everything together, the game
+;; loop. The loop's bindings will serve us to keep the state we need, that is,
+;; the board and the action we want to perform. On each iteration, we either
+;; render the board or wait for a move event. Rendering the board means:
+;; - render the board in the translation phase,
+;; - wait for the transition animations,
+;; - render the board in the reveal phase, and
+;; - wait for the appearence animations.
+;; - If the game didn't end, start another iteration for the board and the :wait
+;;   action, but
+;; - if it did, stop looping.
+;; Wait for a move event means:
+;; - wait for a key event,
+;; - if the move was valid, loop again with the new board and the :render
+;;   action, but
+;; - if it wasn't valid, keep waiting for a valid move event with the current
+;;   board.
+;; The loop is started with a random initial board and the :render action. Even
+;; though there's nothing to show in the first translation phase, it happens so
+;; dast that it doesn't matters.
+
+(let [keys (keys-chan)]
+  (go-loop [board (initial-board build-tile)
+            action :render]
+    (case action
+      :render (do (render board :translation)
+                  (<! (timeout 100))
+                  (render board :reveal)
+                  (<! (timeout 100))
+                  (when-not (ended? board)
+                    (recur board :wait)))
+      :wait (if-let [board' (handle-move board (<! keys))]
+              (recur board' :render)
+              (recur board :wait)))))
