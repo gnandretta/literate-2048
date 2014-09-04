@@ -215,33 +215,91 @@
 
 ;; # Rendering
 
+;; Because manually manipulating the DOM is messy, we'll let
+;; [Quiescent](https://github.com/levand/quiescent) do the work, which is an
+;; abstraction over [React](http://facebook.github.io/react) that leverages
+;; immutability. All we need to do is provide a data structure which tells how
+;; we want the DOM to look like at a given moment, but before getting into it
+;; lets define a couple of helper functions.
+
+;; An element is positioned on the board by specifying the classes "pos" and
+;; "pos-i-j", where i and j are numbers from 0 to 3 representing the row and
+;; the column of the element, respectively. The following function translates a
+;; vector with the element position, that is, the row and the column, to a
+;; string of theese classes.
+
 (defn pos-classes
   [[i j]]
   (str "pos pos-" i "-" j))
+
+;; Also, tiles are styled differently according to their value. We'll use the
+;; class "tile" to identify an element as a tile and "tile-val", where val is
+;; the value of the tile, to apply the correct color, font size, shadow, etc.
 
 (defn tile-classes
   [val]
   (str "tile tile-" val))
 
-(defn background-view
-  [order]
-  (apply d/div {:className "background"}
-    (for [i (range order) j (range order)]
-      (d/div {:className (pos-classes [i j])}))))
+;; To paint the squares of the board, we need to render the following HTML
 
-(defn tiles-view [s]
+;;    <div class="squares">
+;;      <div class="square pos pos-0-0"></div>
+;;      <div class="square pos pos-0-1"></div>
+;;      ...
+;;      <div class="square pos pos-3-3></div>
+;;    </div>
+
+;; The squares-view function, when supplied with 4, returns a virtual
+;; representation of that.
+
+(defn squares-view
+  [order]
+  (apply d/div {:className "squares"}
+    (for [i (range order) j (range order)]
+      (d/div {:className (str "square " (pos-classes [i j]))}))))
+
+;; A tile with a value of 2 that just appeared on the bottom-left corner will
+;; look something like this
+
+;;    <div class="pos pos-3-0">
+;;      <div class="tile tile-2 reveal">2</div>
+;;    </div>
+
+;; The tiles-view function, takes a sequence of tiles and renders them inside a
+;; div with the "tiles" class. Each element of the sequence is a map with the
+;; :val and :pos keys, 2 and [3 0] from the example. A :classes key may be
+;; provided to apply extra classes to the tile element, like "reveal" from the
+;; example. As we'll see in a moment, theese classes are needed to animate the
+;; appearence of new tiles. There is one last detail. When React updates the
+;; DOM, it tries to do it in the most efficiently manner and does not provide
+;; any warantee by default that the same DOM element will be used for the same
+;; tile across render passes. This is a problem for us because the CSS
+;; translation animations happens when the "pos-i-j" class of a DOM element
+;; changes. The goods news is that we can instruct React to do it if we identify
+;; indentify every tile uniquely with a :key. To learn more about React's
+;; reconciliation process see
+;; [this](http://facebook.github.io/react/docs/reconciliation.html) and
+;; [this](http://facebook.github.io/react/docs/multiple-components.html).
+
+(defn tiles-view
+  [s]
   (apply d/div {:className "tiles"}
-    (map (fn [{:keys [val pos key classes] :as tile}]
+    (map (fn [{:keys [val pos key classes]}]
            (d/div {:className (pos-classes pos)
                    :key key}
              (d/div {:className (str classes " " (tile-classes val))}
                val)))
          s)))
 
+;; Finally, a Quiescent component will render the squares and the tiles. To
+;; learn more about Quiescent you can read the
+;; [docs](https://github.com/levand/quiescent/blob/master/docs.md) or just the
+;; [source](https://github.com/levand/quiescent/tree/master/src).
+
 (q/defcomponent SquareBoard
   [tiles order]
   (d/div {:className "square-board"}
-    (background-view order)
+    (squares-view order)
     (tiles-view tiles)))
 
 ;; # UI
