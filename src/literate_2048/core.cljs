@@ -206,8 +206,8 @@
 ;; The game ends when the player wins or loses.
 
 (defn ended?
-  "Returns true if won? is truthy for won? or if applying slide-synth to board
-   and every possible direction always returns board."
+  "Returns true if won? is truthy for board or when applying slide-synth to
+   board and every possible direction always returns board."
   [board]
   (or (won? board)
       (apply = board
