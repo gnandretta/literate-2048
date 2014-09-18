@@ -5,6 +5,7 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/clojurescript "0.0-2311"]
                  [org.clojure/core.async "0.1.338.0-5c5012-alpha"]
+                 [com.facebook/react "0.11.1"]
                  [quiescent "0.1.4"]]
 
   :plugins [[lein-cljsbuild "1.0.4-SNAPSHOT"]]
@@ -12,10 +13,18 @@
   :source-paths ["src"]
 
   :cljsbuild {
-    :builds [{:id "literate-2048"
+    :builds [{:id "dev"
+              :source-paths ["src"]
+              :compiler {
+                :output-to "literate_2048.dev.js"
+                :output-dir "out"
+                :optimizations :none
+                :source-map true}}
+             {:id "release"
               :source-paths ["src"]
               :compiler {
                 :output-to "literate_2048.js"
-                :output-dir "out"
-                :optimizations :none
-                :source-map true}}]})
+                :optimizations :advanced
+                :pretty-print false
+                :preamble ["react/react.min.js"]
+                :externs ["react/externs/react.js"]}}]})
