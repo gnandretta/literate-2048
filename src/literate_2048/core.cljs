@@ -231,10 +231,11 @@
 ;; Because manually manipulating the DOM is messy, we'll let
 ;; [Quiescent](https://github.com/levand/quiescent) do it for us instead.
 ;; Quiescent is an abstraction over [React](http://facebook.github.io/react)
-;; that leverages immutability. We are responsible only for supplying a
-;; specification of what the UI should look like at a given moment. Quiescent
-;; will rely on React to generate the minimal set of changes that need to be
-;; applied to the DOM.
+;; that leverages immutability written by
+;; [Luke VanderHart](https://twitter.com/levanderhart). We are responsible only
+;; for supplying a specification of what the UI should look like at a given
+;; moment. Quiescent will rely on React to generate the minimal set of changes
+;; that need to be applied to the DOM.
 
 ;; Elements are placed on the board on well established positions by wrapping
 ;; them in a div with the "pos" and "pos-i-j" classes, where i and j are numbers
