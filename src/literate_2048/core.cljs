@@ -1,6 +1,6 @@
 (ns literate-2048.core
   (:require [goog.events :as events]
-            [cljs.core.async :refer (<! chan timeout put!)]
+            [cljs.core.async :refer (<! chan dropping-buffer timeout put!)]
             [quiescent :as q :include-macros true]
             [quiescent.dom :as d])
   (:require-macros [cljs.core.async.macros :refer (go-loop)]))
@@ -22,8 +22,8 @@
 ;; The chosen representation for the board is a vector of 16 (4*4) elements. It
 ;; will contain the squares from the first row, followed by the squares from the
 ;; second, and so on. Intuitively, it seems that the natural representation for
-;; such a board is a vector of vectors, but it will make things more complicated
-;; than they need to be.
+;; such a board is a vector of vectors, but it will only make things more
+;; complicated than they need to be.
 
 ;; The simplest board, and our starting point, is one that is completely empty.
 ;; An empty square is represented by nil.
@@ -70,7 +70,7 @@
 
 ;; The goal of the game is to merge tiles together until a tile that is not able
 ;; to be merged appears. Therefore, we need to tell if a tile can be merged with
-;; another tiles and a mechanism to obtain the result of the merge of two given
+;; another tiles and a mechanism to obtain the result of merging two given
 ;; tiles.
 
 ;; Since 'merge' is already a map operation, let's name the process 'synthesis'.
@@ -84,10 +84,7 @@
      another ITile when they can be synthesized or nil when they can't. No tile
      can be synthesized with nil."))
 
-;; While two tiles might be able to participate in a synthesis they might not be
-;; able to be synthesized together.
-
-;; Since we don't know beforehand how many tiles will participate in a
+;; Because we don't know beforehand how many tiles will participate in a
 ;; synthesis, we'll synthesize a collection containing an arbitrary number of
 ;; them. This is easily accomplished by following the guidelines below.
 
@@ -147,8 +144,8 @@
 ;; - and applying synth-adjacent to the result solves the 'merge' part.
 ;; However, the previous function applications lead to an undesired consequence.
 ;; The resulting sequence is not a proper row because of the lack of nil
-;; elements. Fortunately, in this case, nils must be aligned to the right and
-;; can be appended with take-exactly.
+;; elements. Fortunately in this case, nils must be aligned to the right and can
+;; be appended with take-exactly.
 
 (defn slide-synth-line
   "Returns the result of moving non nil elements of line to the beginning,
@@ -171,7 +168,8 @@
 
 ;; - Obtaining the lines. Rows are partitions of 4 elements of our board
 ;;   representation and columns are transposition of them. For the 'right' and
-;;   'up' move, rows and columns need to be reversed to obtain the correct line.
+;;   'up' move, the rows and columns need to be reversed to obtain the correct
+;;   line.
 ;; - Slide and synth the lines.
 ;; - Reassemble the resulting sequences, that is rows or columns possibly
 ;;   reversed, back to our board representation.
@@ -191,7 +189,7 @@
             :up (->> cols (map slide-synth-line) transpose)
             :down (->> cols (map reverse-slide-synth-line) transpose))))))
 
-;; A tile is added when the board changes.
+;; To complete a move, a tile is added when the board changes.
 
 (defn move
   "Returns a new board that results from sliding and synthesizing the tiles of
@@ -202,8 +200,9 @@
   (let [board' (slide-synth board direction)]
     (when (not= board board') (add-tile tile-fn board'))))
 
-;; As stated in the 'Tile synthesis' section, the player wins the game when a
-;; tile that is not able to be merged appears.
+;; Sadly, moves can’t be made indefinitely. As stated in the 'Tile synthesis'
+;; section, the player wins the game when a tile that is not able to be merged
+;; appears.
 
 (defn won?
   "Returns true if board contains a tile for which -synth? is falsey."
@@ -253,10 +252,10 @@
 ;; updates the DOM it tries to do it in the most efficiently manner by recycling
 ;; what is already there. It does not provide (by default) any guarantee that
 ;; the same DOM node will be used for our example div across render passes.
-;; Fortunately, the only reason React can't keep a mapping between our
+;; Lucky for us, the only reason React can't keep a mapping between our
 ;; specification and the DOM is that it doesn't have a way to identify the
 ;; elements we specify. We can solve the problem if we provide React the
-;; information it needs by assigning a key to our divs. The
+;; information it needs by assigning a 'key' to our divs. The
 ;; [official documentation](http://facebook.github.io/react/docs/reconciliation.html)
 ;; is a great place to learn more about React's reconciliation process.
 
@@ -279,7 +278,7 @@
   []
   (d/div {:className "square"}))
 
-;; To render the board we need to draw a square in every position.
+;; And we need to draw one in every position to render the board.
 
 (defn squares-view
   "Returns a div containing a square for each position of a board with the given
@@ -291,8 +290,8 @@
 
 ;; Tiles are styled differently according to their value. We'll use the
 ;; class "tile" to apply styles shared by all tiles and "tile-val", where val is
-;; the tile's value, to apply the right color, font size, shadow, etc. However,
-;; a tile might have another classes.
+;; the tile value, to apply the right color, font size, shadow, etc. However, a
+;; tile might have another classes.
 
 ;;    <div class="tile tile-2 fade-in">2</div>
 
@@ -358,10 +357,10 @@
   ([val] {:val val :key (keyword (gensym ""))})
   ([x y] (assoc (build-tile (+ (:val x) (:val y))) :src [x y])))
 
-;; Before going further, an implementation of the ITile protocol, presented in
-;; section 'Tile synthesis', must be provided. The synthesis of two tiles with
-;; the same :val is another tile (described above), but the synthesis of two
-;; tiles with different :val is nil. In addition, a tile with a :val of 2048
+;; Before going any further, an implementation of the ITile protocol, presented
+;; in section 'Tile synthesis', must be provided. The synthesis of two tiles
+;; with the same :val is another tile (described above), but the synthesis of
+;; two tiles with different :val is nil. In addition, a tile with a :val of 2048
 ;; can't be synthesized anymore.
 
 (extend-type cljs.core/PersistentArrayMap
@@ -379,7 +378,7 @@
 ;; tile appears randomly.
 
 ;; As you can probably guess, our board representation needs to be transformed
-;; into something that SquareBoard, defined in section 'Rendering', can make
+;; into something that SquareBoard (defined in section 'Rendering') can make
 ;; sense of. Additionaly, the transformation must remove the novelty when the
 ;; slide phase is rendered. The next steps illustrate a way to achieve that.
 ;; - Keep only the tiles of the board by removing the empty squares and
@@ -424,8 +423,8 @@
                                       (:src x) "highlight"))))
        (sort-by :key)))
 
-;; A Game component will wrap SquareBoard and supply it with the tile sequence
-;; it expects from a board and a phase. Remember we want to render new and
+;; A Game component will wrap SquareBoard and will supply the tile sequence it
+;; expects from a board and a phase. Remember we want to render new and
 ;; synthesized tiles on the :reveal phase, but not on :slide. The component will
 ;; also be responsible for showing a message when the game ends.
 
@@ -495,9 +494,9 @@
   []
   (let [key-map {37 :left 38 :up 39 :right 40 :down}]
     (events->chan js/document goog.events.EventType.KEYUP
-      (chan 1 (comp (map #(.-keyCode %))
-                    (filter (set (keys key-map)))
-                    (map key-map))))))
+      (chan (dropping-buffer 1) (comp (map #(.-keyCode %))
+                                      (filter (set (keys key-map)))
+                                      (map key-map))))))
 
 ;; ## The game loop
 
@@ -508,8 +507,8 @@
 
 ;; ### Rendering the board
 
-;; The list below describes an iteration when the value for action binding is
-;; :render. Given the initial state consist of a random initial board and the
+;; The list below describes an iteration when the value for the action binding
+;; is :render. Given the initial state consist of a random initial board and the
 ;; :render action, this will take place at the very beginning.
 
 ;; - The board is rendered in the slide phase, and we wait a bit while the
