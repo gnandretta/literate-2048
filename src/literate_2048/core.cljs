@@ -57,9 +57,10 @@
        (sort-by :key)))
 
 (q/defcomponent Game
-  [{:keys [board phase]}]
+  [{:keys [board tile phase]}]
   (d/div {:className "game"}
     (ui/SquareBoard (board->tiles board (= phase :reveal)) b/board-order)
+    (d/div {:className "next-tile"} (str "next: " (:val tile)))
     (when (m/ended? board)
       (d/div {:className "end-message"}
         (if (m/won? board) "You win!" "You lose!")))))
@@ -67,8 +68,8 @@
 (defn render
   "Renders the Game component to the DOM node with the 'game' id passing board
    and and phase as its values."
-  [board phase]
-  (q/render (Game {:board board :phase phase})
+  [board tile phase]
+  (q/render (Game {:board board :tile tile :phase phase})
             (.getElementById js/document "game")))
 
 (defn handle-move
@@ -83,9 +84,9 @@
             tile (build-tile)
             action :render]
     (case action
-      :render (do (render board :slide)
+      :render (do (render board tile :slide)
                   (<! (timeout 100))
-                  (render board :reveal)
+                  (render board tile :reveal)
                   (<! (timeout 100))
                   (when-not (m/ended? board)
                     (recur board tile :wait)))
