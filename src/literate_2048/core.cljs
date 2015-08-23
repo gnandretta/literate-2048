@@ -75,11 +75,12 @@
   "Performs a new move on board in the given direction after removing transient
    data from the tiles (:new and :src keys). Returns the new board, or nil when
    no change occurs."
-  [board direction]
-  (m/move (build-tile) (map #(dissoc % :new :src) board) direction))
+  [board tile direction]
+  (m/move tile (map #(dissoc % :new :src) board) direction))
 
 (let [keys (e/keys-chan)]
   (go-loop [board (initial-board)
+            tile (build-tile)
             action :render]
     (case action
       :render (do (render board :slide)
@@ -87,7 +88,7 @@
                   (render board :reveal)
                   (<! (timeout 100))
                   (when-not (m/ended? board)
-                    (recur board :wait)))
-      :wait (if-let [board' (handle-move board (<! keys))]
-              (recur board' :render)
-              (recur board :wait)))))
+                    (recur board tile :wait)))
+      :wait (if-let [board' (handle-move board tile (<! keys))]
+              (recur board' (build-tile) :render)
+              (recur board tile :wait)))))
