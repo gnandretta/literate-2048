@@ -12,13 +12,6 @@
 
 (println "Hello world!")
 
-(defn initial-board
-  "Returns a board with two tiles returned by tile-fn, which will be called
-   twice."
-  [tile-fn]
-  (let [f (partial b/add-tile tile-fn)]
-    (-> b/empty-board f f)))
-
 (defn build-tile
   "Returns a map with :val associated to val and :key to an unique keyword. If
    no val is supplied, it defaults to 2 most of the time but it might default to
@@ -35,6 +28,11 @@
   (-synth [this other]
     (when (= (:val this) (:val other))
       (build-tile this other))))
+
+(defn initial-board
+  "Returns a board with two tiles."
+  []
+  (->> b/empty-board (b/add-tile (build-tile)) (b/add-tile (build-tile))))
 
 (defn board->tiles
   "Returns a sequence of tiles taken from board with their :pos and sorted by
@@ -78,10 +76,10 @@
    data from the tiles (:new and :src keys). Returns the new board, or nil when
    no change occurs."
   [board direction]
-  (m/move build-tile (map #(dissoc % :new :src) board) direction))
+  (m/move (build-tile) (map #(dissoc % :new :src) board) direction))
 
 (let [keys (e/keys-chan)]
-  (go-loop [board (initial-board build-tile)
+  (go-loop [board (initial-board)
             action :render]
     (case action
       :render (do (render board :slide)

@@ -20,10 +20,9 @@
   (-> v nil-indexes shuffle first))
 
 (defn add-tile
-  "Takes a board and returns a new one with one empty square replaced by the
-   return value of tile-fn."
-  [tile-fn board]
-  (assoc board (rand-nil-index board) (tile-fn)))
+  "Takes a board and returns a new one with one empty square replaced by tile."
+  [tile board]
+  (assoc board (rand-nil-index board) tile))
 
 (defprotocol ITile
   "Implementation details of a tile."

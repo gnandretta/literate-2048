@@ -36,13 +36,13 @@
             :down (->> cols (map reverse-slide-synth-line) transpose))))))
 
 (defn move
-  "Returns a new board that results from sliding and synthesizing the tiles of
-   board in the given direction and adding a tile, which is built with tile-fn.
-   Unless sliding and synthesizing the tiles doesn't change the original board.
-   In that case nil is returned."
-  [tile-fn board direction]
+  "Returns a new board that results from sliding and synthesizing the
+  tiles of board in the given direction and adding a tile. Unless
+  sliding and synthesizing the tiles doesn't change the original
+  board.  In that case nil is returned."
+  [tile board direction]
   (let [board' (slide-synth board direction)]
-    (when (not= board board') (b/add-tile tile-fn board'))))
+    (when (not= board board') (b/add-tile tile board'))))
 
 (defn won?
   "Returns true if board contains a tile for which -synth? is falsey."
