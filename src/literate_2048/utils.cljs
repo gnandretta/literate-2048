@@ -16,3 +16,7 @@
   "Returns a vector with the indexes of the nil elements of v."
   [v]
   (vec (for [i (range (count v)) :when (nil? (get v i))] i)))
+
+(defn transpose
+  [coll]
+  (apply map list coll))

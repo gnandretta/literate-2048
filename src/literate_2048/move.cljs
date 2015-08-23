@@ -1,6 +1,6 @@
 (ns literate-2048.move
   (:require [literate-2048.board :as b]
-            [literate-2048.utils :refer (compact take-exactly)]))
+            [literate-2048.utils :refer (compact take-exactly transpose)]))
 
 (defn synth-adjacent
   "Returns a sequence of the elements of tiles, replacing adjacent elements with
@@ -24,10 +24,9 @@
   "Returns the result of sliding and synthesizing the tiles of board in the
    given direction."
   [board direction]
-  (let [transpose #(apply map list %)
-        reverse-slide-synth-line (comp reverse slide-synth-line reverse)
-        rows (partition b/board-order board)
-        cols (transpose rows)]
+  (let [reverse-slide-synth-line (comp reverse slide-synth-line reverse)
+        rows (b/rows board)
+        cols (b/cols board)]
     (vec (flatten
           (case direction
             :left (map slide-synth-line rows)

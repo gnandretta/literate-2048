@@ -1,5 +1,5 @@
 (ns literate-2048.board
-  (:require [literate-2048.utils :refer (nil-indexes)]))
+  (:require [literate-2048.utils :refer (nil-indexes transpose)]))
 
 (def board-order
   "Number of squares on a board row or column. It's also the count of rows and
@@ -9,6 +9,14 @@
 (def empty-board
   "Vector containing board-order^2 nil elements."
   (vec (repeat (* board-order board-order) nil)))
+
+(defn rows
+  [board]
+  (partition board-order board))
+
+(defn cols
+  [board]
+  (transpose (rows board)))
 
 (defn add-tile
   "Takes a board and returns a new one with one empty square replaced by tile."
