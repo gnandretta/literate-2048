@@ -11,3 +11,8 @@
    defaults to an infinite collection of nils."
   ([n coll] (take-exactly n coll (repeat nil)))
   ([n coll pad] (take n (concat coll (cycle pad)))))
+
+(defn nil-indexes
+  "Returns a vector with the indexes of the nil elements of v."
+  [v]
+  (vec (for [i (range (count v)) :when (nil? (get v i))] i)))
