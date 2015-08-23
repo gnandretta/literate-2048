@@ -34,6 +34,33 @@
             :up (->> cols (map slide-synth-line) transpose)
             :down (->> cols (map reverse-slide-synth-line) transpose))))))
 
+;; TODO: the next two functions are very alike.
+(defn- moved-rows
+  [board-before board-after]
+  (compact (keep-indexed #(if %2 % nil)
+                         (map #(not= % %2)
+                              (b/rows board-before)
+                              (b/rows board-after)))))
+
+(defn- moved-cols
+  [board-before board-after]
+  (compact (keep-indexed #(if %2 % nil)
+                         (map #(not= % %2)
+                              (b/cols board-before)
+                              (b/cols board-after)))))
+
+
+(defn allowed-indexes
+  [board-before board-after direction]
+  (let [rows (moved-rows board-before board-after)
+        cols (moved-cols board-before board-after)]
+    (apply (fn [is js] (vec (for [i is j js] (+ (* i b/board-order) j))))
+           (case direction
+             :left [rows [3]]
+             :right [rows [0]]
+             :up [[3] cols]
+             :down [[0] cols]))))
+
 (defn move
   "Returns a new board that results from sliding and synthesizing the
   tiles of board in the given direction and adding a tile. Unless
@@ -41,7 +68,8 @@
   board.  In that case nil is returned."
   [tile board direction]
   (let [board' (slide-synth board direction)]
-    (when (not= board board') (b/add-tile tile board'))))
+    (when (not= board board')
+      (b/add-tile tile board' (allowed-indexes board board' direction)))))
 
 (defn won?
   "Returns true if board contains a tile for which -synth? is falsey."
