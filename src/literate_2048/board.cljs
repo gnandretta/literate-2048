@@ -12,17 +12,12 @@
 (defn nil-indexes
   "Returns a set with the indexes of the nil elements of v."
   [v]
-  (into #{} (for [i (range (count v)) :when (nil? (get v i))] i)))
-
-(defn rand-nil-index
-  "Returns the index of a randomly chosen nil element of v."
-  [v]
-  (-> v nil-indexes shuffle first))
+  (vec (for [i (range (count v)) :when (nil? (get v i))] i)))
 
 (defn add-tile
   "Takes a board and returns a new one with one empty square replaced by tile."
-  [tile board]
-  (assoc board (rand-nil-index board) tile))
+  ([tile board] (add-tile tile board (nil-indexes board)))
+  ([tile board indexes] (assoc board (rand-nth indexes) tile)))
 
 (defprotocol ITile
   "Implementation details of a tile."
