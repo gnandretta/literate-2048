@@ -18,15 +18,18 @@
    4, also the key :new is mapped to true. Alternatively, when applied to two
    tiles x and y, the result is the same as calling it with the sum of the tiles
    :val and associng the key :src to a vector containing x and y."
-  ([] (assoc (build-tile (if (< (rand) 0.8) 2 4)) :new true))
+  ([] (assoc (build-tile (rand-nth [1 2 3])) :new true))
   ([val] {:val val :key (keyword (gensym ""))})
   ([x y] (assoc (build-tile (+ (:val x) (:val y))) :src [x y])))
 
 (extend-type cljs.core/PersistentArrayMap
   b/ITile
-  (-synth? [this] (not= (:val this) 2048))
+  (-synth? [this] (not= (:val this) 768))
   (-synth [this other]
-    (when (= (:val this) (:val other))
+    (when (case (:val this)
+            1 (= (:val other) 2)
+            2 (= (:val other) 1)
+            (and (:val this) (:val other) (= (:val this) (:val other))))
       (build-tile this other))))
 
 (defn initial-board

@@ -128,43 +128,43 @@
   vertical-align: middle;
 }
 
-.tile-2 {
+.tile-1 {
   background-color: rgb(238, 228,218);
   color: rgb(110,102,93);
 }
 
-.tile-4 {
+.tile-2 {
   background-color: rgb(237, 224,200);
   color: rgb(119,110,101);
 }
 
-.tile-8 {
+.tile-3 {
   background-color: rgb(242, 177, 121);
   color: rgb(249,246,242);
 }
 
-.tile-16 {
+.tile-6 {
   background-color: rgb(245, 149, 99);
   color: rgb(249,246,242);
 }
 
-.tile-32 {
+.tile-12 {
   background-color: rgb(245, 124, 95);
   color: rgb(249,246,242);
 }
 
-.tile-64 {
+.tile-24 {
   background-color: rgb(246, 94, 59);
   color: rgb(249,246,242);
 }
 
-.tile-128 {
+.tile-48 {
   background-color: rgb(237, 207,114);
   color: rgb(249,246,242);
   font-size: 48px;
 }
 
-.tile-256 {
+.tile-96 {
   background-color: rgb(237, 204, 97);
   color: rgb(249,246,242);
   font-size: 48px;
@@ -172,7 +172,7 @@
   box-shadow: 0 0 25px 5px rgb(237, 204, 97);
 }
 
-.tile-512 {
+.tile-192 {
   background-color: rgb(237, 204, 97);
   color: rgb(249,246,242);
   font-size: 48px;
@@ -180,7 +180,7 @@
   box-shadow: 0 0 25px 5px rgb(237, 204, 97);
 }
 
-.tile-1024 {
+.tile-384 {
   background-color: rgb(237, 204, 97);
   color: rgb(249,246,242);
   font-size: 40px;
@@ -188,7 +188,7 @@
   box-shadow: 0 0 25px 5px rgb(237, 204, 97);
 }
 
-.tile-2048 {
+.tile-768 {
   background-color: rgb(237, 204, 97);
   color: rgb(249,246,242);
   font-size: 40px;
