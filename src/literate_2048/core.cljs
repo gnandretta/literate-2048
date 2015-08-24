@@ -35,7 +35,7 @@
 (defn initial-board
   "Returns a board with two tiles."
   []
-  (->> b/empty-board (b/add-tile (build-tile)) (b/add-tile (build-tile))))
+  (reduce #(b/add-tile (build-tile %2) %) b/empty-board [1 1 1 2 2 2 3 3 3]))
 
 (defn board->tiles
   "Returns a sequence of tiles taken from board with their :pos and sorted by
