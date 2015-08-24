@@ -5,11 +5,13 @@
 (defn move-line
   [line]
   (take-exactly b/board-order
-                (loop [xs (compact line), r []]
+                (loop [xs line, r []]
                   (if (seq xs)
-                    (if-let [x (b/-synth (first xs) (second xs))]
-                      (recur (rest (rest xs)) (conj r x))
-                      (recur (rest xs) (conj r (first xs))))
+                    (if (nil? (first xs))
+                      (concat r (rest xs))
+                      (if-let [x (b/-synth (first xs) (second xs))]
+                        (concat (conj r x) (rest (rest xs)))
+                        (recur (rest xs) (conj r (first xs)))))
                     r))))
 
 (defn move
