@@ -77,7 +77,7 @@
    data from the tiles (:new and :src keys). Returns the new board, or nil when
    no change occurs."
   [board tile direction]
-  (m/move tile (map #(dissoc % :new :src) board) direction))
+  (m/attempt-move tile (map #(dissoc % :new :src) board) direction))
 
 (let [keys (e/keys-chan)]
   (go-loop [board (initial-board)
