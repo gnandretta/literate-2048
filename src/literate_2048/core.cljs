@@ -43,7 +43,7 @@
    :new and :src keys, respectively. When novelty? is false it removes tiles
    with the :new key and replaces the ones that contain :src with the tiles in
    it."
-  [board novelty?]
+  [board novelty? direction]
   (->> board
        (keep-indexed (fn [i x]
                        (let [pos [(quot i b/board-order) (rem i b/board-order)]]
@@ -55,14 +55,14 @@
                    (conj r x)))
                [])
        (map (fn [x]
-              (assoc x :classes (cond (:new x) "fade-in"
+              (assoc x :classes (cond (:new x) (str "slide-" (name direction))
                                       (:src x) "highlight"))))
        (sort-by :key)))
 
 (q/defcomponent Game
-  [{:keys [board tile phase]}]
+  [{:keys [board tile phase direction]}]
   (d/div {:className "game"}
-    (ui/SquareBoard (board->tiles board (= phase :reveal)) b/board-order)
+    (ui/SquareBoard (board->tiles board (= phase :reveal) direction) b/board-order)
     (d/div {:className "next-tile"} (str "next: " (:val tile)))
     (when (m/ended? board)
       (d/div {:className "end-message"}
@@ -71,8 +71,8 @@
 (defn render
   "Renders the Game component to the DOM node with the 'game' id passing board
    and and phase as its values."
-  [board tile phase]
-  (q/render (Game {:board board :tile tile :phase phase})
+  [board tile phase direction]
+  (q/render (Game {:board board :tile tile :phase phase :direction direction})
             (.getElementById js/document "game")))
 
 (defn handle-move
@@ -85,14 +85,16 @@
 (let [keys (e/keys-chan)]
   (go-loop [board (initial-board)
             tile (build-tile)
-            action :render]
+            action :render
+            direction nil]
     (case action
-      :render (do (render board tile :slide)
+      :render (do (render board tile :slide direction)
                   (<! (timeout 100))
-                  (render board tile :reveal)
+                  (render board tile :reveal direction)
                   (<! (timeout 100))
                   (when-not (m/ended? board)
-                    (recur board tile :wait)))
-      :wait (if-let [board' (handle-move board tile (<! keys))]
-              (recur board' (build-tile) :render)
-              (recur board tile :wait)))))
+                    (recur board tile :wait nil)))
+      :wait (recur board tile :move (<! keys))
+      :move (if-let [board' (handle-move board tile direction)]
+              (recur board' (build-tile) :render direction)
+              (recur board tile :wait nil)))))
