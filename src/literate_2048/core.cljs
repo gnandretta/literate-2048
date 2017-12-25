@@ -5,10 +5,6 @@
             [quiescent.dom :as d])
   (:require-macros [cljs.core.async.macros :refer (go-loop)]))
 
-(enable-console-print!)
-
-(println "Hello world!")
-
 ;; # Board and tiles
 
 ;; The board on which the game is played consist of 16 squares ordered in 4 rows
