@@ -42,25 +42,21 @@
   [v]
   (-> v nil-indexes shuffle first))
 
-;; Then, we associate the index with a new tile in the board representation. A
-;; function that builds the tile must be provided because we don't really care
-;; about its details.
+;; Then, we associate the index with a new tile in the board representation. The
+;; tile must be provided because we don't really care about its details.
 
 (defn add-tile
-  "Takes a board and returns a new one with one empty square replaced by the
-   return value of tile-fn."
-  [tile-fn board]
-  (assoc board (rand-nil-index board) (tile-fn)))
+  "Takes a board and returns a new one with one empty square replaced by tile."
+  [tile board]
+  (assoc board (rand-nil-index board) tile))
 
 ;; All the conditions are now met to build a board with two tiles, which is
 ;; necessary for the player to make the first move.
 
 (defn initial-board
-  "Returns a board with two tiles returned by tile-fn, which will be called
-   twice."
-  [tile-fn]
-  (let [f (partial add-tile tile-fn)]
-    (-> empty-board f f)))
+  "Returns a board with two tiles (tile-1 and tile-2) in random positions."
+  [tile-1 tile-2]
+  (->> empty-board (add-tile tile-1) (add-tile tile-2)))
 
 ;; # Tile synthesis
 
@@ -194,7 +190,7 @@
    In that case nil is returned."
   [tile-fn board direction]
   (let [board' (slide-synth board direction)]
-    (when (not= board board') (add-tile tile-fn board'))))
+    (when (not= board board') (add-tile (tile-fn) board'))))
 
 ;; Sadly, moves can’t be made indefinitely. As stated in the 'Tile synthesis'
 ;; section, the player wins the game when a tile that is not able to be merged
@@ -531,7 +527,7 @@
 ;;   :wait action. In other words, we’ll keep waiting for a valid move.
 
 (let [keys (keys-chan)]
-  (go-loop [board (initial-board build-tile)
+  (go-loop [board (initial-board (build-tile) (build-tile))
             action :render]
     (case action
       :render (do (render board :slide)
