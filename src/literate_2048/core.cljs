@@ -155,31 +155,39 @@
 ;; A line is a sequence that represents the flow of the tiles during a move. In
 ;; other words, is a row or a column of the board where the closest a square is
 ;; to edge of the board the tiles are sliding to, the sooner it appears in the
-;; sequence. With that in mind, the 'slide and synth' of a whole board can be
-;;  summarized as:
+;; sequence.
 
-;; - Obtaining the lines. Rows are partitions of 4 elements of our board
-;;   representation and columns are transposition of them. For the 'right' and
-;;   'up' move, the rows and columns need to be reversed to obtain the correct
-;;   line.
-;; - Slide and synth the lines.
-;; - Reassemble the resulting sequences, that is rows or columns possibly
-;;   reversed, back to our board representation.
+;; With all that in mind, to 'slide and synth' a whole board to the left can
+;; build a matrix from the original board representation. This matrix will be a
+;; vector of vectors, where each of the vectors are a row. Then we slide and
+;; synth every row, and finally flatten the matrix. For the other directions
+;; we'll need to transform the matrix before sliding and synthing every row
+;; (to build the lines) and perform the inverse transformation afterwards (to
+;; undo the effects of the first transformation and turn the lines back into
+;; rows):
+;;
+;; - right: flip the matrix vertically (reverse each row), before and after
+;;   sliding and synthesizing each row.
+;; - up: transpose the matrix vertically (turn columns into rows), before and
+;;   after.
+;; - down: rotate the matrix clockwise, slide and synth every row, and rotate
+;;   it counter-clockwise afterwards.
 
 (defn slide-synth
   "Returns the result of sliding and synthesizing the tiles of board in the
    given direction."
   [board direction]
-  (let [transpose #(apply map list %)
-        reverse-slide-synth-line (comp reverse slide-synth-line reverse)
-        rows (partition board-order board)
-        cols (transpose rows)]
-    (vec (flatten
-          (case direction
-            :left (map slide-synth-line rows)
-            :right (map reverse-slide-synth-line rows)
-            :up (->> cols (map slide-synth-line) transpose)
-            :down (->> cols (map reverse-slide-synth-line) transpose))))))
+  (let [m (partition board-order board)
+        m-slide-synth (partial map slide-synth-line)
+        m-vflip (partial map reverse)
+        m-transpose (partial apply map list)
+        m-rotate-cw (comp m-vflip m-transpose)
+        m-rotate-ccw (comp m-transpose m-vflip)]
+    (vec (flatten (case direction
+                    :left (m-slide-synth m)
+                    :right (-> m m-vflip m-slide-synth m-vflip)
+                    :up (-> m m-transpose m-slide-synth m-transpose)
+                    :down (-> m m-rotate-cw m-slide-synth m-rotate-ccw))))))
 
 ;; To complete a move, a tile is added when the board changes.
 
