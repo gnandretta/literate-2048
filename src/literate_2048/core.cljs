@@ -1,7 +1,7 @@
 (ns literate-2048.core
   (:require [goog.events :as events]
             [cljs.core.async :refer (<! chan dropping-buffer timeout put!)]
-            [quiescent :as q :include-macros true]
+            [quiescent.core :as q]
             [quiescent.dom :as d])
   (:require-macros [cljs.core.async.macros :refer (go-loop)]))
 
@@ -266,9 +266,9 @@
    Optionally, a React key can be provided."
   ([pos content] (pos-view pos nil content))
   ([[i j] key content]
-     (d/div {:className (str "pos pos-" i "-" j)
-             :key key}
-       content)))
+   (d/div {:className (str "pos pos-" i "-" j)
+           :key (or key (str i j))}
+     content)))
 
 ;; A square is just a div with the 'square' class.
 
