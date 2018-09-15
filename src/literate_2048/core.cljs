@@ -193,12 +193,11 @@
 
 (defn move
   "Returns a new board that results from sliding and synthesizing the tiles of
-   board in the given direction and adding a tile, which is built with tile-fn.
-   Unless sliding and synthesizing the tiles doesn't change the original board.
-   In that case nil is returned."
-  [tile-fn board direction]
+   board in the given direction and adding a tile. However, nil is returned if
+   sliding and synthesizing the tiles doesn't change the original board."
+  [tile board direction]
   (let [board' (slide-synth board direction)]
-    (when (not= board board') (add-tile (tile-fn) board'))))
+    (when (not= board board') (add-tile tile board'))))
 
 ;; Sadly, moves can’t be made indefinitely. As stated in the 'Tile synthesis'
 ;; section, the player wins the game when a tile that is not able to be merged
@@ -461,8 +460,8 @@
   "Performs a new move on board in the given direction after removing transient
    data from the tiles (:new and :src keys). Returns the new board, or nil when
    no change occurs."
-  [board direction]
-  (move build-tile (map #(dissoc % :new :src) board) direction))
+  [board tile direction]
+  (move tile (map #(dissoc % :new :src) board) direction))
 
 ;; The player will make moves by pressing the arrow keys. Instead of registering
 ;; callbacks to handle keyup events, we’ll convert them to a core.async’s
@@ -534,8 +533,9 @@
 ;; - But, if the move wasn’t valid, we iterate with the "current" board and the
 ;;   :wait action. In other words, we’ll keep waiting for a valid move.
 
-(let [keys (keys-chan)]
-  (go-loop [board (initial-board (build-tile) (build-tile))
+(let [keys (keys-chan)
+      build-rand-tile build-tile]
+  (go-loop [board (initial-board (build-rand-tile) (build-rand-tile))
             action :render]
     (case action
       :render (do (render board :slide)
@@ -544,6 +544,6 @@
                   (<! (timeout 100))
                   (when-not (ended? board)
                     (recur board :wait)))
-      :wait (if-let [board' (handle-move board (<! keys))]
+      :wait (if-let [board' (handle-move board (build-rand-tile) (<! keys))]
               (recur board' :render)
               (recur board :wait)))))
