@@ -5,10 +5,4 @@ pom.xml.asc
 /classes/
 /target/
 /checkouts/
-.lein-deps-sum
-.lein-repl-history
-.lein-plugins/
-.lein-failures
-/out/
-/literate_2048.js
-/literate_2048.dev.js
+.cpcache/

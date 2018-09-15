@@ -1,0 +1,2 @@
+{:main literate-2048.core
+ :output-to "target/public/build.js"}

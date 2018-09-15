@@ -5,12 +5,8 @@ Repo for [Literate-ish 2048 in ClojureScript](https://medium.com/@gnandretta/lit
 
 ## Usage
 
-Install [Leiningen](http://github.com/technomancy/leiningen) and run
-`lein cljsbuild once dev` to build the game. You can play by opening
-`index.dev.html` in your favorite browser (I've only played it on chrome and
-firefox). If you want to play with the code instead  run
-`lein cljsbuild auto dev` to automatically rebuild the game when the source
-changes.
+Install [Clojure CLI tools](https://clojure.org/guides/getting_started)
+and run `clojure -A:dev`.
 
 ## License
 

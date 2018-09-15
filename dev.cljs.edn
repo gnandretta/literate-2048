@@ -1,0 +1,3 @@
+^{:open-url "http://localhost:[[server-port]]/index.dev.html"
+  :css-dirs ["resources/public"]}
+{:main literate-2048.core}
