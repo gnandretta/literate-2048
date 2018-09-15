@@ -348,11 +348,15 @@
 ;;   this one.
 
 (defn build-tile
-  "Returns a map with :val associated to val and :key to an unique keyword. If
-   no val is supplied, it defaults to 2 most of the time but it might default to
-   4, also the key :new is mapped to true."
-  ([] (assoc (build-tile (if (< (rand) 0.8) 2 4)) :new true))
-  ([val] {:val val :key (keyword (gensym ""))}))
+  "Returns a map with :val associated to val and :key to an unique keyword."
+  [val]
+  {:val val :key (keyword (gensym ""))})
+
+(defn build-new-tile
+  "Builds a tile with the given val and assocs :new to true to tell it
+  has just been added to the board."
+  [val]
+  (assoc (build-tile val) :new true))
 
 (defn synth-tiles
   "Builds a tile with the sum of the :val of x and y and assocs the
@@ -537,7 +541,7 @@
 ;;   :wait action. In other words, we’ll keep waiting for a valid move.
 
 (let [keys (keys-chan)
-      build-rand-tile build-tile]
+      build-rand-tile #(build-new-tile (if (< (rand) 0.8) 2 4))]
   (go-loop [board (initial-board (build-rand-tile) (build-rand-tile))
             action :render]
     (case action
