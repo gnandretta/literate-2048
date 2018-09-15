@@ -350,12 +350,15 @@
 (defn build-tile
   "Returns a map with :val associated to val and :key to an unique keyword. If
    no val is supplied, it defaults to 2 most of the time but it might default to
-   4, also the key :new is mapped to true. Alternatively, when applied to two
-   tiles x and y, the result is the same as calling it with the sum of the tiles
-   :val and associng the key :src to a vector containing x and y."
+   4, also the key :new is mapped to true."
   ([] (assoc (build-tile (if (< (rand) 0.8) 2 4)) :new true))
-  ([val] {:val val :key (keyword (gensym ""))})
-  ([x y] (assoc (build-tile (+ (:val x) (:val y))) :src [x y])))
+  ([val] {:val val :key (keyword (gensym ""))}))
+
+(defn synth-tiles
+  "Builds a tile with the sum of the :val of x and y and assocs the
+  key :src to a vector containing x and y."
+  [x y]
+  (assoc (build-tile (+ (:val x) (:val y))) :src [x y]))
 
 ;; Before going any further, an implementation of the ITile protocol, presented
 ;; in section 'Tile synthesis', must be provided. The synthesis of two tiles
@@ -368,7 +371,7 @@
   (-synth? [this] (not= (:val this) 2048))
   (-synth [this other]
     (when (= (:val this) (:val other))
-      (build-tile this other))))
+      (synth-tiles this other))))
 
 ;; Apart from taking place in the computer's memory, all the events need to be
 ;; shown on the screen. We'll break every move in two phases, slide and reveal,
